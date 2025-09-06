@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  temporal-real-server-check:
+    runs-on: ubuntu-latest
+    services:
+      temporal:
+        image: temporalio/auto-setup:1.25.0
+        ports:
+          - 7233:7233
+    env:
+      TEMPORAL_ADDRESS: localhost:7233
+      TEMPORAL_NAMESPACE: default
+      CONVEX_HTTP_URL: ${{ secrets.CONVEX_HTTP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Sync Python deps
+        run: uv sync
+      - name: Temporal real server check
+        run: uv run python -m job_scrape_application.workflows.temporal_real_server_check
+
+  convex-http-health:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.CONVEX_HTTP_URL != '' }}
+    env:
+      CONVEX_HTTP_URL: ${{ secrets.CONVEX_HTTP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Sync Python deps
+        run: uv sync
+      - name: Convex HTTP health check
+        run: uv run python -m job_scrape_application.workflows.health_check
+

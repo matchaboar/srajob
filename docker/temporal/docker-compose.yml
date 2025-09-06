@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  temporalite:
+    build:
+      context: .
+      dockerfile: Dockerfile.temporal-dev
+    container_name: temporalite
+    ports:
+      - "7233:7233" # Temporal Frontend
+      - "8233:8233" # Temporal Web UI (served by dev server)

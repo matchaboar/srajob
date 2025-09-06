@@ -1,0 +1,15 @@
+[build]
+  base = "job_board_application"
+  command = "npm ci && npm run build"
+  publish = "job_board_application/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_CONVEX_URL = "https://affable-kiwi-46.convex.cloud"
+
+# SPA fallback so client-side routes work on refresh
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
