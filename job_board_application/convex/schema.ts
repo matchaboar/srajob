@@ -52,6 +52,18 @@ const applicationTables = {
     completedAt: v.number(),
     items: v.any(),
   }).index("by_source", ["sourceUrl"]),
+
+  resumes: defineTable({
+    userId: v.id("users"),
+    data: v.any(),
+  }).index("by_user", ["userId"]),
+
+  form_fill_queue: defineTable({
+    userId: v.id("users"),
+    jobUrl: v.string(),
+    status: v.union(v.literal("pending"), v.literal("completed")),
+    queuedAt: v.number(),
+  }).index("by_user", ["userId"]),
 };
 
 export default defineSchema({

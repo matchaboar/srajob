@@ -245,6 +245,61 @@ http.route({
   }),
 });
 
+/**
+ * API endpoint to store a user's resume
+ *
+ * POST /api/resume
+ * Body: resume object
+ */
+http.route({
+  path: "/api/resume",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const resume = await request.json();
+    await ctx.runMutation(api.formFiller.storeResume, { resume });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+/**
+ * API endpoint to queue a job application for form filling
+ *
+ * POST /api/form-fill/queue
+ * Body: { jobUrl: string }
+ */
+http.route({
+  path: "/api/form-fill/queue",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+    await ctx.runMutation(api.formFiller.queueApplication, { jobUrl: body.jobUrl });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+/**
+ * API endpoint to fetch the next queued job application
+ *
+ * GET /api/form-fill/next
+ */
+http.route({
+  path: "/api/form-fill/next",
+  method: "GET",
+  handler: httpAction(async (ctx) => {
+    const next = await ctx.runQuery(api.formFiller.nextApplication, {});
+    return new Response(JSON.stringify(next), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
 export const insertScrapeRecord = mutation({
   args: {
     sourceUrl: v.string(),
