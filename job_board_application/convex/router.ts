@@ -2,6 +2,7 @@ import { httpRouter } from "convex/server";
 import { httpAction, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import type { Id, Doc } from "./_generated/dataModel";
 
 const http = httpRouter();
 
@@ -135,6 +136,160 @@ export const listSites = query({
     }
     return await q.collect();
   },
+});
+
+// Atomically lease the next available site for scraping.
+// Excludes completed sites and honors locks.
+export const leaseSite = mutation({
+  args: {
+    workerId: v.string(),
+    lockSeconds: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const ttlMs = Math.max(1, Math.floor((args.lockSeconds ?? 300) * 1000));
+
+    // Pull enabled sites and pick the first that is not completed and not locked (or lock expired)
+    const candidates = await ctx.db
+      .query("sites")
+      .withIndex("by_enabled", (q) => q.eq("enabled", true))
+      .collect();
+
+    const pick: any = candidates
+      .filter((s: any) => !s.completed)
+      .filter((s: any) => !s.failed)
+      .filter((s: any) => !s.lockExpiresAt || s.lockExpiresAt <= now)
+      .sort((a: any, b: any) => (a.lastRunAt ?? 0) - (b.lastRunAt ?? 0))[0];
+
+    if (!pick) return null;
+
+    await ctx.db.patch(pick._id, {
+      lockedBy: args.workerId,
+      lockExpiresAt: now + ttlMs,
+    });
+    // Return minimal fields for the worker
+    const fresh = await ctx.db.get(pick._id as Id<"sites">);
+    if (!fresh) return null;
+    const s = fresh as Doc<"sites">;
+    return {
+      _id: s._id,
+      name: s.name,
+      url: s.url,
+      pattern: s.pattern,
+      enabled: s.enabled,
+      lastRunAt: s.lastRunAt,
+      lockedBy: s.lockedBy,
+      lockExpiresAt: s.lockExpiresAt,
+      completed: s.completed,
+    };
+  },
+});
+
+// Mark a leased site as completed and clear its lock.
+export const completeSite = mutation({
+  args: { id: v.id("sites") },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    await ctx.db.patch(args.id, {
+      completed: true,
+      lockedBy: "",
+      lockExpiresAt: 0,
+      lastRunAt: now,
+    });
+    return { success: true };
+  },
+});
+
+// Clear a lock without completing, e.g., on failure.
+export const releaseSite = mutation({
+  args: { id: v.id("sites") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      lockedBy: "",
+      lockExpiresAt: 0,
+    });
+    return { success: true };
+  },
+});
+
+// Record a failure and release the lock so it can be retried later
+export const failSite = mutation({
+  args: {
+    id: v.id("sites"),
+    error: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const cur = await ctx.db.get(args.id);
+    const count = (cur as any)?.failCount ?? 0;
+    await ctx.db.patch(args.id, {
+      failCount: count + 1,
+      lastFailureAt: Date.now(),
+      lastError: args.error,
+      failed: true,
+      lockedBy: "",
+      lockExpiresAt: 0,
+    });
+    return { success: true };
+  },
+});
+
+// HTTP endpoint to lease next site
+http.route({
+  path: "/api/sites/lease",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+    const site = await ctx.runMutation(api.router.leaseSite, {
+      workerId: body.workerId,
+      lockSeconds: body.lockSeconds ?? 300,
+    });
+    return new Response(JSON.stringify(site), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+// HTTP endpoint to mark site completed
+http.route({
+  path: "/api/sites/complete",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+    const res = await ctx.runMutation(api.router.completeSite, { id: body.id });
+    return new Response(JSON.stringify(res), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+// HTTP endpoint to release a lock (optional)
+http.route({
+  path: "/api/sites/release",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+    const res = await ctx.runMutation(api.router.releaseSite, { id: body.id });
+    return new Response(JSON.stringify(res), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+// HTTP endpoint to mark a site as failed and release
+http.route({
+  path: "/api/sites/fail",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+    const res = await ctx.runMutation(api.router.failSite, { id: body.id, error: body.error });
+    return new Response(JSON.stringify(res), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
 });
 
 export const upsertSite = mutation({

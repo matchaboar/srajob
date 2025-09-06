@@ -17,6 +17,9 @@ class Site(TypedDict, total=False):
     pattern: Optional[str]
     enabled: bool
     lastRunAt: Optional[int]
+    lockedBy: Optional[str]
+    lockExpiresAt: Optional[int]
+    completed: Optional[bool]
 
 
 async def fetch_sites() -> List[Site]:
@@ -29,6 +32,21 @@ async def fetch_sites() -> List[Site]:
         data = resp.json()
         if not isinstance(data, list):
             raise RuntimeError(f"Unexpected sites payload: {data!r}")
+        return data  # type: ignore[return-value]
+
+
+async def lease_site(worker_id: str, lock_seconds: int = 300) -> Optional[Site]:
+    if not settings.convex_http_url:
+        raise RuntimeError("CONVEX_HTTP_URL env var is required")
+    url = settings.convex_http_url.rstrip("/") + "/api/sites/lease"
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(url, json={"workerId": worker_id, "lockSeconds": lock_seconds})
+        resp.raise_for_status()
+        data = resp.json()
+        if data is None:
+            return None
+        if not isinstance(data, dict):
+            raise RuntimeError(f"Unexpected lease payload: {data!r}")
         return data  # type: ignore[return-value]
 
 
@@ -85,3 +103,22 @@ async def store_scrape(scrape: Dict[str, Any]) -> str:
         data = resp.json()
         return str(data.get("scrapeId"))
 
+
+async def complete_site(site_id: str) -> None:
+    if not settings.convex_http_url:
+        raise RuntimeError("CONVEX_HTTP_URL env var is required")
+    url = settings.convex_http_url.rstrip("/") + "/api/sites/complete"
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(url, json={"id": site_id})
+        resp.raise_for_status()
+        _ = resp.json()
+
+
+async def fail_site(site_id: str, error: Optional[str] = None) -> None:
+    if not settings.convex_http_url:
+        raise RuntimeError("CONVEX_HTTP_URL env var is required")
+    url = settings.convex_http_url.rstrip("/") + "/api/sites/fail"
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(url, json={"id": site_id, "error": error})
+        resp.raise_for_status()
+        _ = resp.json()

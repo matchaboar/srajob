@@ -21,8 +21,11 @@ async def main() -> None:
         workflows=[ScrapeWorkflow],
         activities=[
             activities.fetch_sites,
+            activities.lease_site,
             activities.scrape_site,
             activities.store_scrape,
+            activities.complete_site,
+            activities.fail_site,
         ],
     )
 
@@ -35,4 +38,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-

@@ -41,6 +41,17 @@ const applicationTables = {
     enabled: v.boolean(),
     // Optional timestamp of the last successful run
     lastRunAt: v.optional(v.number()),
+    // Simple cooperative locking for scraper workers
+    lockedBy: v.optional(v.string()),
+    lockExpiresAt: v.optional(v.number()),
+    // Optional completion flag if treating a site as a one-off job
+    completed: v.optional(v.boolean()),
+    // If true, site is in a failed state and excluded from auto-leasing until manually retried
+    failed: v.optional(v.boolean()),
+    // Failure tracking so stuck jobs get retried and diagnosable
+    failCount: v.optional(v.number()),
+    lastFailureAt: v.optional(v.number()),
+    lastError: v.optional(v.string()),
   })
     .index("by_enabled", ["enabled"]),
 

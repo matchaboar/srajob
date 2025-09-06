@@ -1,0 +1,7 @@
+Base=https://affable-kiwi-46.convex.site worker=test-worker-442a591b-7a08-4748-8489-ae729f80aa9c unique=d7bacef8
+POST /api/sites
+POST /api/sites
+POST /api/sites/lease #1
+POST /api/sites/complete #1
+POST /api/sites/lease #2
+POST /api/sites/complete #2

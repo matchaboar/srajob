@@ -1,0 +1,33 @@
+candidate:
+  first_name: Alex
+  last_name: Parker
+  full_name: Alex Parker
+  email: alex.parker@example.com
+  phone: "+1 (415) 555-0101"
+  linkedin: https://www.linkedin.com/in/alex-parker
+  github: https://github.com/alexparker
+  portfolio: https://alexparker.dev
+  location: San Francisco, CA, USA
+  current_company: Example Corp
+  years_experience: 6
+  salary_expectation: "180000 USD"
+  work_authorization: "US Citizen"
+  work_authorized: "Yes"
+  relocation: "Open to remote; SF Bay Area preferred"
+  pronouns: they/them
+answers:
+  cover_letter: |
+    Dear Hiring Team,
+
+    I’m excited to apply for this role at Datadog. I have 6 years of
+    experience building reliable, observable distributed systems, with
+    a focus on developer experience and platform stability. In my last
+    role at Example Corp, I led the migration to a unified metrics
+    pipeline and introduced tracing across key services, improving MTTR by 35%.
+
+    I’d love to bring my skills in Python, TypeScript, and cloud-native
+    observability to your team. Thank you for your time!
+
+    Sincerely,
+    Alex Parker
+

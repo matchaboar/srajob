@@ -17,6 +17,20 @@ export function AdminPage() {
   const disabledCount = allSites ? allSites.filter((s: any) => !s.enabled).length : 0;
   const upsertSite = useMutation(api.router.upsertSite);
   const updateSiteEnabled = useMutation(api.router.updateSiteEnabled);
+  // Worker job results
+  const successfulSites = useQuery(api.sites.listSuccessfulSites, { limit: 50 });
+  const failedSites = useQuery(api.sites.listFailedSites, { limit: 50 });
+  const retrySite = useMutation(api.sites.retrySite);
+  const successUrls = (successfulSites || []).map((s: any) => s.url);
+  const failedUrls = (failedSites || []).map((s: any) => s.url);
+  const history = useQuery(api.sites.getScrapeHistoryForUrls, {
+    urls: Array.from(new Set([...successUrls, ...failedUrls])),
+    limit: 3,
+  });
+  const historyMap: Record<string, { _id: string; startedAt: number; completedAt: number }[]> = {};
+  if (history) {
+    for (const h of history as any[]) historyMap[h.sourceUrl] = h.entries;
+  }
 
   // Add site form state
   const [name, setName] = useState("");
@@ -195,6 +209,80 @@ export function AdminPage() {
         <p className="text-sm text-gray-600 mt-2">
           This will add 10 sample job listings to the database for testing purposes.
         </p>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow-sm border mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Worker Jobs</h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 className="font-medium text-green-800 mb-2">Successful</h3>
+            <div className="border rounded-md divide-y">
+              {successfulSites === undefined && (
+                <div className="p-3 text-gray-500">Loading...</div>
+              )}
+              {successfulSites && successfulSites.length === 0 && (
+                <div className="p-3 text-gray-500">No successful jobs yet.</div>
+              )}
+              {successfulSites && successfulSites.map((s: any) => (
+                <div key={s._id} className="p-3">
+                  <div className="font-medium">{s.name || s.url}</div>
+                  <div className="text-xs text-gray-600 break-all">{s.url}</div>
+                  <div className="text-xs text-gray-500">Last run: {s.lastRunAt ? new Date(s.lastRunAt).toLocaleString() : "N/A"}</div>
+                  {historyMap[s.url] && historyMap[s.url].length > 0 && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      History: {historyMap[s.url].map((e) => new Date(e.completedAt).toLocaleString()).join(", ")}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="font-medium text-red-800 mb-2">Failed</h3>
+            <div className="border rounded-md divide-y">
+              {failedSites === undefined && (
+                <div className="p-3 text-gray-500">Loading...</div>
+              )}
+              {failedSites && failedSites.length === 0 && (
+                <div className="p-3 text-gray-500">No failed jobs.</div>
+              )}
+              {failedSites && failedSites.map((s: any) => (
+                <div key={s._id} className="p-3 flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-medium">{s.name || s.url}</div>
+                    <div className="text-xs text-gray-600 break-all">{s.url}</div>
+                    {s.lastError && (
+                      <div className="text-xs text-red-600 mt-1">Error: {s.lastError}</div>
+                    )}
+                    <div className="text-xs text-gray-500 mt-1">
+                      Failures: {s.failCount ?? 1} • Last at: {s.lastFailureAt ? new Date(s.lastFailureAt).toLocaleString() : "N/A"}
+                    </div>
+                    {historyMap[s.url] && historyMap[s.url].length > 0 && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        History: {historyMap[s.url].map((e) => new Date(e.completedAt).toLocaleString()).join(", ")}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await retrySite({ id: s._id, clearError: true });
+                          toast.success("Retry queued (site unlocked)");
+                        } catch (e: any) {
+                          toast.error(`Retry failed: ${e?.message || "Unknown error"}`);
+                        }
+                      }}
+                      className="px-3 py-1.5 text-sm bg-amber-600 text-white rounded-md hover:bg-amber-700"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm border">
