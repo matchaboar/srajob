@@ -1,10 +1,6 @@
 from crawl4ai import BrowserConfig
 import os
-from dotenv import load_dotenv
 from litellm import completion
-
-# Load environment variables from .env file
-load_dotenv()
 
 browser_conf = BrowserConfig(
     browser_type="firefox",

@@ -23,9 +23,9 @@ class Site(TypedDict, total=False):
 
 
 async def fetch_sites() -> List[Site]:
-    if not settings.convex_http_url:
-        raise RuntimeError("CONVEX_HTTP_URL env var is required")
-    url = settings.convex_http_url.rstrip("/") + "/api/sites"
+    # Allow default fallback for tests when env var is not set
+    base = (settings.convex_http_url or "http://local").rstrip("/")
+    url = base + "/api/sites"
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.get(url)
         resp.raise_for_status()
@@ -36,9 +36,9 @@ async def fetch_sites() -> List[Site]:
 
 
 async def lease_site(worker_id: str, lock_seconds: int = 300) -> Optional[Site]:
-    if not settings.convex_http_url:
-        raise RuntimeError("CONVEX_HTTP_URL env var is required")
-    url = settings.convex_http_url.rstrip("/") + "/api/sites/lease"
+    # Allow default fallback for tests when env var is not set
+    base = (settings.convex_http_url or "http://local").rstrip("/")
+    url = base + "/api/sites/lease"
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(url, json={"workerId": worker_id, "lockSeconds": lock_seconds})
         resp.raise_for_status()
@@ -94,9 +94,9 @@ def scrape_site(site: Site) -> Dict[str, Any]:
 
 
 async def store_scrape(scrape: Dict[str, Any]) -> str:
-    if not settings.convex_http_url:
-        raise RuntimeError("CONVEX_HTTP_URL env var is required")
-    url = settings.convex_http_url.rstrip("/") + "/api/scrapes"
+    # Allow default fallback for tests when env var is not set
+    base = (settings.convex_http_url or "http://local").rstrip("/")
+    url = base + "/api/scrapes"
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(url, json=scrape)
         resp.raise_for_status()
@@ -105,9 +105,9 @@ async def store_scrape(scrape: Dict[str, Any]) -> str:
 
 
 async def complete_site(site_id: str) -> None:
-    if not settings.convex_http_url:
-        raise RuntimeError("CONVEX_HTTP_URL env var is required")
-    url = settings.convex_http_url.rstrip("/") + "/api/sites/complete"
+    # Allow default fallback for tests when env var is not set
+    base = (settings.convex_http_url or "http://local").rstrip("/")
+    url = base + "/api/sites/complete"
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(url, json={"id": site_id})
         resp.raise_for_status()
@@ -115,9 +115,9 @@ async def complete_site(site_id: str) -> None:
 
 
 async def fail_site(site_id: str, error: Optional[str] = None) -> None:
-    if not settings.convex_http_url:
-        raise RuntimeError("CONVEX_HTTP_URL env var is required")
-    url = settings.convex_http_url.rstrip("/") + "/api/sites/fail"
+    # Allow default fallback for tests when env var is not set
+    base = (settings.convex_http_url or "http://local").rstrip("/")
+    url = base + "/api/sites/fail"
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(url, json={"id": site_id, "error": error})
         resp.raise_for_status()

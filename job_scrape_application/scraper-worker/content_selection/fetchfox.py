@@ -1,12 +1,8 @@
 import os
 import json
 from fetchfox_sdk import FetchFox
-from dotenv import load_dotenv
 
 from srajob.sites import sites
-
-# Load environment variables from .env if present
-load_dotenv()
 
 URL = sites.DATADOG_SWE_US
 URL_PATTERN = "https://careers.datadoghq.com/detail/**"
@@ -15,7 +11,9 @@ start_urls = [URL]
 
 api_key = os.getenv("FETCHFOX_API_KEY")
 if not api_key:
-    raise SystemExit("Set FETCHFOX_API_KEY in your .env to run this script")
+    raise SystemExit(
+        "FETCHFOX_API_KEY is required. Run your command via 'dotenvx run -- uv run ...' or set it in your environment."
+    )
 
 fox = FetchFox(api_key=api_key)
 

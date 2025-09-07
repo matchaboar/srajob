@@ -63,10 +63,10 @@ def extract_forms(html: str) -> List[Form]:
                 if f:
                     label_for[f] = lab_text
                 else:
-                    # label wrapping input
-                    inp = lb.find(["input", "textarea", "select"])  # type: ignore
-                    if inp and inp.get("id"):
-                        label_for[inp.get("id")] = lab_text
+                    # label wrapping one or more inputs – map all child inputs with ids
+                    for inp in lb.find_all(["input", "textarea", "select"]):  # type: ignore
+                        if inp and inp.get("id"):
+                            label_for[inp.get("id")] = lab_text
 
             fields: List[FormField] = []
             for inp in form.find_all(["input", "textarea", "select"]):
@@ -113,9 +113,17 @@ def extract_forms(html: str) -> List[Form]:
         input_re = re.compile(
             r"<(input|textarea|select)([^>]*)>", re.IGNORECASE | re.MULTILINE
         )
-        attr_re = re.compile(r"(\w+)=\"([^\"]*)\"|
-                              (\w+)=\'([^\']*)\'|
-                              (\w+)=([^\s>]+)", re.IGNORECASE | re.VERBOSE)
+        label_re = re.compile(
+            r"<label[^>]*for=\"([^\"]+)\"[^>]*>(.*?)</label>|"
+            r"<label[^>]*for=\'([^\']+)\'[^>]*>(.*?)</label>",
+            re.IGNORECASE | re.DOTALL,
+        )
+        attr_re = re.compile(
+            r"(\w+)=\"([^\"]*)\"|"  # double-quoted
+            r"(\w+)=\'([^\']*)\'|"    # single-quoted
+            r"(\w+)=([^\s>]+)",        # unquoted
+            re.IGNORECASE | re.VERBOSE,
+        )
 
         def parse_attrs(s: str) -> Dict[str, str]:
             out: Dict[str, str] = {}
@@ -128,22 +136,32 @@ def extract_forms(html: str) -> List[Form]:
                     out[m.group(5).lower()] = m.group(6)
             return out
 
+        # Build a minimal label map id->text
+        label_for: Dict[str, str] = {}
+        for m in label_re.finditer(html):
+            id1, text1, id2, text2 = m.groups()
+            lab_id = id1 or id2
+            lab_text = re.sub(r"<[^>]+>", " ", (text1 or text2 or ""))
+            lab_text = re.sub(r"\s+", " ", lab_text).strip()
+            if lab_id and lab_text:
+                label_for[lab_id] = lab_text
+
         fields: List[FormField] = []
         for m in input_re.finditer(html):
             tag = m.group(1).lower()
             attrs = parse_attrs(m.group(2) or "")
             itype = attrs.get("type", "text" if tag != "select" else "select").lower()
+            id_attr = attrs.get("id")
             fields.append(
                 FormField(
                     tag=tag,
                     type=itype,
                     name=attrs.get("name"),
-                    id=attrs.get("id"),
-                    label=None,
+                    id=id_attr,
+                    label=label_for.get(id_attr or ""),
                     placeholder=attrs.get("placeholder"),
                     required=("required" in attrs),
                 )
             )
 
         return [Form(action=None, method="get", fields=fields)]
-

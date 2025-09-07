@@ -6,7 +6,7 @@
  */
 
 import fs from "fs";
-import { config as loadEnvFile } from "dotenv";
+import { config as loadEnvFile } from "@dotenvx/dotenvx";
 import { spawnSync } from "child_process";
 
 if (!fs.existsSync(".env.local")) {
@@ -15,6 +15,7 @@ if (!fs.existsSync(".env.local")) {
 }
 
 const config = {};
+// Load from .env.local using dotenvx (supports encrypted values if present)
 loadEnvFile({ path: ".env.local", processEnv: config });
 
 const runOnceWorkflow = process.argv.includes("--once");

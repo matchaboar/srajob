@@ -60,25 +60,31 @@ Ensure-PodmanRunning
 $net = 'tempnet'
 Ensure-Network $net
 
-function Load-DotEnv($path) {
-  if (-not (Test-Path $path)) { return }
+function Import-Dotenvx($repoRoot) {
+  # Load and decrypt .env into current process env via dotenvx
   try {
-    Get-Content -Path $path | ForEach-Object {
-      if ($_ -match '^[ \t]*#') { return }
-      if ($_ -notmatch '^[ \t]*([^=\s]+)[ \t]*=[ \t]*(.*)$') { return }
-      $key = $Matches[1]; $val = $Matches[2]
-      # Trim surrounding quotes
-      if ($val.StartsWith('"') -and $val.EndsWith('"')) { $val = $val.Substring(1, $val.Length-2) }
-      # Always take the last assignment in the file
-      Set-Item -Path "Env:$key" -Value $val
+    if (-not (Test-Path (Join-Path $repoRoot '.env'))) { return }
+    Push-Location $repoRoot
+    $code = 'const dx=require("@dotenvx/dotenvx");const out=dx.get(undefined,{all:true});process.stdout.write(JSON.stringify(out));'
+    $json = & node -e $code
+    Pop-Location
+    if (-not $json) { return }
+    $data = $json | ConvertFrom-Json
+    foreach ($kv in $data.GetEnumerator()) {
+      $k = [string]$kv.Key
+      $v = [string]$kv.Value
+      if ([string]::IsNullOrWhiteSpace($k)) { continue }
+      Set-Item -Path "Env:$k" -Value $v
     }
-  } catch { Write-Verbose "Failed to parse .env: $($_.Exception.Message)" }
+  } catch {
+    Write-Verbose "dotenvx load failed: $($_.Exception.Message)"
+  }
 }
 
 # Load .env from repo root to supply envs
 $scriptDir = Split-Path -Parent $PSCommandPath
 $repoRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
-Load-DotEnv (Join-Path $repoRoot '.env')
+Import-Dotenvx $repoRoot
 
 function Invoke-WithTimeout([scriptblock]$Script, [int]$TimeoutSeconds) {
   $job = Start-Job -ScriptBlock $Script

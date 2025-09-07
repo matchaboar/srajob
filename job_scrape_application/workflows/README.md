@@ -16,14 +16,14 @@ Install deps
 - uv sync
 
 Run worker
-- uv run python -m job_scrape_application.workflows.worker
+- dotenvx run -- uv run python -m job_scrape_application.workflows.worker
 
 Create/Update 12h schedule
-- uv run python -m job_scrape_application.workflows.create_schedule
+- dotenvx run -- uv run python -m job_scrape_application.workflows.create_schedule
 
 Health check (sites + jobs)
 - Ensure `CONVEX_HTTP_URL` is set to your HTTP base (Convex Cloud uses the `.convex.site` domain)
-- Run: `uv run python -m job_scrape_application.workflows.health_check`
+- Run: `dotenvx run -- uv run python -m job_scrape_application.workflows.health_check`
 
 Temporal: local DEV (Docker/Podman)
 - Dev image build + run (Docker Compose): `docker compose -f docker/temporal/docker-compose.yml up -d`
@@ -31,7 +31,7 @@ Temporal: local DEV (Docker/Podman)
   - Start + health check with timeouts: `pwsh docker/temporal/start-podman.ps1 -RunCheck -HealthCheckTimeoutSeconds 180 -BuildTimeoutSeconds 600`
   - Stop: `pwsh docker/temporal/stop-podman.ps1`
 - UI: http://localhost:8233 (server on `localhost:7233`)
-- Real-server Temporal check: `uv run python -m job_scrape_application.workflows.temporal_real_server_check`
+- Real-server Temporal check: `dotenvx run -- uv run python -m job_scrape_application.workflows.temporal_real_server_check`
   - Respects `TEMPORAL_ADDRESS` (default `localhost:7233`) and `TEMPORAL_NAMESPACE` (default `default`)
   - Requires `CONVEX_HTTP_URL`
 

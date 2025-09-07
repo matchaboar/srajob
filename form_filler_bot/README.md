@@ -31,23 +31,31 @@ uv run python -m form_filler_bot.cli --html-file form_filler_bot/test_pages/data
   --plan-only --out-plan form_filler_bot/test_pages/plan.json
 ```
 
-4) Use a live URL instead of a local HTML file (also saves a snapshot for testing):
+4) Use the live Greenhouse application embed URL (saves a snapshot for testing):
 
 ```
-uv run python -m form_filler_bot.cli --url "https://careers.datadoghq.com/detail/7073137/?gh_jid=7073137" \
-  --save-html --out-html form_filler_bot/test_pages/datadog_job_7073137.html \
+uv run python -m form_filler_bot.cli --url "https://boards.greenhouse.io/embed/job_app?for=datadog&token=7073137" \
+  --save-html --out-html form_filler_bot/test_pages/datadog_job_7073137_app.html \
   --resume form_filler_bot/samples/resume.sample.yaml --plan-only
 ```
 
-5) Execute a plan with `browser-use` (stubbed integration):
+5) Execute a plan with `browser-use` (headful):
 
 ```
-uv add browser-use pyyaml
-uv run python -m form_filler_bot.cli --url "https://careers.datadoghq.com/detail/7073137/?gh_jid=7073137" \
+uv add browser-use pyyaml beautifulsoup4
+# Install Chromium if needed (headful)
+uvx playwright install chromium --with-deps --no-shell
+
+# Option A: run against the live application embed (Greenhouse)
+uv run python -m form_filler_bot.cli --url "https://boards.greenhouse.io/embed/job_app?for=datadog&token=7073137" \
+  --resume form_filler_bot/samples/resume.sample.yaml --execute --headless
+
+# Option B: run against the saved local HTML snapshot (file://)
+uv run python -m form_filler_bot.cli --html-file form_filler_bot/test_pages/datadog_job_7073137_app.html \
   --resume form_filler_bot/samples/resume.sample.yaml --execute
 ```
 
-Note: The `browser-use` adapter here is a thin placeholder. Once installed, map `FillAction`s to the actual browser-use API calls inside `BrowserUseAdapter`.
+Note: The adapter maps `FillAction`s to browser-use events. Pass `--headless` or set `BROWSER_HEADLESS=1` for headless runs (useful in CI). On desktops you can omit `--headless` to see the browser.
 
 ## Files
 
@@ -69,4 +77,3 @@ Note: The `browser-use` adapter here is a thin placeholder. Once installed, map 
 - Keep command timeouts short and avoid long-running processes.
 - Use `uv` for Python execution and dependency management.
 - For execution, ensure `browser-use` and its browser dependencies are installed/configured.
-

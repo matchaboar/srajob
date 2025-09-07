@@ -10,21 +10,28 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Load-DotEnv($path) {
-  if (-not (Test-Path $path)) { return }
+function Import-Dotenvx($repoRoot) {
   try {
-    Get-Content -Path $path | ForEach-Object {
-      if ($_ -match '^[ \t]*#') { return }
-      if ($_ -notmatch '^[ \t]*([^=\s]+)[ \t]*=[ \t]*(.*)$') { return }
-      $key = $Matches[1]; $val = $Matches[2]
-      if ($val.StartsWith('"') -and $val.EndsWith('"')) { $val = $val.Substring(1, $val.Length-2) }
-      Set-Item -Path "Env:$key" -Value $val
+    if (-not (Test-Path (Join-Path $repoRoot '.env'))) { return }
+    Push-Location $repoRoot
+    $code = 'const dx=require("@dotenvx/dotenvx");const out=dx.get(undefined,{all:true});process.stdout.write(JSON.stringify(out));'
+    $json = & node -e $code
+    Pop-Location
+    if (-not $json) { return }
+    $data = $json | ConvertFrom-Json
+    foreach ($kv in $data.GetEnumerator()) {
+      $k = [string]$kv.Key
+      $v = [string]$kv.Value
+      if ([string]::IsNullOrWhiteSpace($k)) { continue }
+      Set-Item -Path "Env:$k" -Value $v
     }
-  } catch { Write-Verbose "Failed to parse .env: $($_.Exception.Message)" }
+  } catch {
+    Write-Verbose "dotenvx load failed: $($_.Exception.Message)"
+  }
 }
 
 $repoRoot = (Resolve-Path ".").Path
-Load-DotEnv (Join-Path $repoRoot '.env')
+Import-Dotenvx $repoRoot
 
 function Wait-Port($hostname, $port, $retries=60, $delaySeconds=1) {
   for($i=0;$i -lt $retries;$i++){ try { if((Test-NetConnection -ComputerName $hostname -Port $port -WarningAction SilentlyContinue).TcpTestSucceeded){ return } } catch {}; Start-Sleep -Seconds $delaySeconds }

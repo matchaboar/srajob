@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "npm-run-all --parallel dev:frontend dev:backend",
+    "dev": "dotenvx run -- npm-run-all --parallel dev:frontend dev:backend",
     "dev:frontend": "vite --open",
-    "dev:backend": "convex dev",
-    "build": "vite build",
-    "lint": "tsc -p convex -noEmit --pretty false && tsc -p . -noEmit --pretty false && convex dev --once && vite build"
+    "dev:backend": "dotenvx run -- convex dev",
+    "build": "dotenvx run -- vite build",
+    "lint": "dotenvx run -- tsc -p convex -noEmit --pretty false && dotenvx run -- tsc -p . -noEmit --pretty false && dotenvx run -- convex dev --once && dotenvx run -- vite build"
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.80",
@@ -27,7 +27,7 @@
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "~10",
-    "dotenv": "^16.4.7",
+    "@dotenvx/dotenvx": "^1.49.0",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",

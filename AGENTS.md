@@ -1,6 +1,7 @@
 # Rules
-- This is a powershell 7 shell on Windows. This is not BASH. Do not use BASH commands.
-- NEVER allow a powershell command or file to run forever. This wastes time as someone must fix your process. ALWAYS have a timeout or background task.
+- NEVER allow a command or file to run forever. This wastes time as someone must fix your process. ALWAYS have a timeout or background task.
+- Do not try to install playwright. It's already installed.
+- Assume that PowerShell 7 is always available to your shell environment. If you are writing a PowerShell command, you must very carefully handle quote, slash, $, &, escaping of characters. Think about that escaping before just writing a broken command.
 - More examples of long running shell commands that should not be allowed to run forever: `convex dev` or `npm run dev`
 - If you need to use python, use `uv` and not python/pip commands. Example: `uv run` or `uv add`
 - Do not use docker, use podman instead.

@@ -1,0 +1,740 @@
+[
+  {
+    "selector": "input[name=\"utf8\"]",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "utf8",
+      "id": null,
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#fingerprint",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "fingerprint",
+      "id": "fingerprint",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#render_date",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "render_date",
+      "id": "render_date",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#page_load_time",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "page_load_time",
+      "id": "page_load_time",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#from_embed",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "from_embed",
+      "id": "from_embed",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#first_name",
+    "op": "type",
+    "value": "Alex",
+    "field": {
+      "tag": "input",
+      "type": "text",
+      "name": "job_application[first_name]",
+      "id": "first_name",
+      "label": "First Name*",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#last_name",
+    "op": "type",
+    "value": "Parker",
+    "field": {
+      "tag": "input",
+      "type": "text",
+      "name": "job_application[last_name]",
+      "id": "last_name",
+      "label": "Last Name*",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#email",
+    "op": "type",
+    "value": "alex.parker@example.com",
+    "field": {
+      "tag": "input",
+      "type": "text",
+      "name": "job_application[email]",
+      "id": "email",
+      "label": "Email*",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#phone",
+    "op": "type",
+    "value": "+1 (415) 555-0101",
+    "field": {
+      "tag": "input",
+      "type": "text",
+      "name": "job_application[phone]",
+      "id": "phone",
+      "label": "Phone*",
+      "placeholder": null,
+      "required": true,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#dev-field-1",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "text",
+      "name": "dev_field_1",
+      "id": "dev-field-1",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#resume_text",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "textarea",
+      "type": "text",
+      "name": "job_application[resume_text]",
+      "id": "resume_text",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_0_question_id",
+    "op": "type",
+    "value": "https://www.linkedin.com/in/alex-parker",
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][0][question_id]",
+      "id": "job_application_answers_attributes_0_question_id",
+      "label": "LinkedIn Profile",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_0_priority",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][0][priority]",
+      "id": "job_application_answers_attributes_0_priority",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_0_text_value",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "text",
+      "name": "job_application[answers_attributes][0][text_value]",
+      "id": "job_application_answers_attributes_0_text_value",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_1_question_id",
+    "op": "type",
+    "value": "https://alexparker.dev",
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][1][question_id]",
+      "id": "job_application_answers_attributes_1_question_id",
+      "label": "Website",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_1_priority",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][1][priority]",
+      "id": "job_application_answers_attributes_1_priority",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_1_text_value",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "text",
+      "name": "job_application[answers_attributes][1][text_value]",
+      "id": "job_application_answers_attributes_1_text_value",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_2_question_id",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][2][question_id]",
+      "id": "job_application_answers_attributes_2_question_id",
+      "label": "I certify that the information provided in this application is true and correct to the best of my knowledge. I understand that any false statements or omissions may result in disqualification from employment consideration or, if employed, in termination.*--YesNo",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_2_priority",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][2][priority]",
+      "id": "job_application_answers_attributes_2_priority",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_2_boolean_value",
+    "op": "select",
+    "value": null,
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "job_application[answers_attributes][2][boolean_value]",
+      "id": "job_application_answers_attributes_2_boolean_value",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "--",
+        "1",
+        "0"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_3_question_id",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][3][question_id]",
+      "id": "job_application_answers_attributes_3_question_id",
+      "label": "I understand my application will be processed in accordance with Datadog’s Candidate Privacy Policy.*Read ourApplicant and Candidate Privacy Policy.--YesNo",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_3_priority",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][3][priority]",
+      "id": "job_application_answers_attributes_3_priority",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_3_boolean_value",
+    "op": "select",
+    "value": null,
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "job_application[answers_attributes][3][boolean_value]",
+      "id": "job_application_answers_attributes_3_boolean_value",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "--",
+        "1",
+        "0"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_4_question_id",
+    "op": "type",
+    "value": "US Citizen",
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][4][question_id]",
+      "id": "job_application_answers_attributes_4_question_id",
+      "label": "Are you legally authorised to work full-time in the country where this job is based?*NB: We may not be able to provide visa/work permit sponsorship for this role. Current authorization to work in this country will be needed to complete the hiring process.Please selectYes, no restriction.Yes, but I will need sponsorship in the future.No, I need sponsorship now.",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_4_priority",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][4][priority]",
+      "id": "job_application_answers_attributes_4_priority",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_4_answer_selected_options_attributes_4_question_option_id",
+    "op": "select",
+    "value": null,
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "job_application[answers_attributes][4][answer_selected_options_attributes][4][question_option_id]",
+      "id": "job_application_answers_attributes_4_answer_selected_options_attributes_4_question_option_id",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "Please select",
+        "568627605",
+        "568627606",
+        "568627607"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_5_question_id",
+    "op": "type",
+    "value": "alex.parker@example.com",
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][5][question_id]",
+      "id": "job_application_answers_attributes_5_question_id",
+      "label": "In what cities are you available to work?*This job requires you to be in the office 3 days a week. All open locations for this role are listed at the top of this page. For accommodations, find the link in the Recruiter's email signature.AmsterdamAtlantaBangaloreBarcelonaBarueri São PauloBordeauxBostonChicagoCopenhagenDenverDubaiDublinGrenobleLisbonLondonLyonMadridMexico CityMontpellierNantesNew YorkNiceOsakaParisRemoteSalt Lake CitySan FranciscoSan Jose (Campbell)San SebastianSão PauloSeattleSeoulSingaporeSophia AntipolisStockholmSydneyTel AvivTokyoToronto",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_5_priority",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][5][priority]",
+      "id": "job_application_answers_attributes_5_priority",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#question_5",
+    "op": "select",
+    "value": null,
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "question[5][]",
+      "id": "question_5",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "568627608",
+        "568627609",
+        "568627610",
+        "568627611",
+        "568627612",
+        "568627614",
+        "568627615",
+        "568627616",
+        "568627617",
+        "568627618",
+        "568627619",
+        "568627620",
+        "568627621",
+        "568627622",
+        "568627623",
+        "568627624",
+        "568627625",
+        "568627626",
+        "568627627",
+        "568627628",
+        "568627629",
+        "568627630",
+        "584926144",
+        "568627631",
+        "568627632",
+        "568627633",
+        "568627634",
+        "568627635",
+        "568627636",
+        "568627637",
+        "568627638",
+        "568627639",
+        "568627640",
+        "568627641",
+        "568627642",
+        "568627643",
+        "568627644",
+        "568627645",
+        "568627646"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_6_question_id",
+    "op": "type",
+    "value": "https://www.linkedin.com/in/alex-parker",
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][6][question_id]",
+      "id": "job_application_answers_attributes_6_question_id",
+      "label": "How did you hear about this opportunity?*Please selectAfroTechAngelistBlind AppBreak Through TechBuiltIn BostonBuiltIn NYCColorStackDatadog EmployeeDatadog's Careers PageEventFlexjobsGirls Who CodeGithubGlassdoorHacker NewsHiredHiretualI love Datadog's product!InstagramJobTeaserLinkedIn (Datadog Page)LinkedIn (Job Posting)Rewriting the CodeSchool job boardThe MuseThriveUnderdogWelcome to the JungleOther",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_6_priority",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "hidden",
+      "name": "job_application[answers_attributes][6][priority]",
+      "id": "job_application_answers_attributes_6_priority",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_answers_attributes_6_answer_selected_options_attributes_6_question_option_id",
+    "op": "select",
+    "value": null,
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "job_application[answers_attributes][6][answer_selected_options_attributes][6][question_option_id]",
+      "id": "job_application_answers_attributes_6_answer_selected_options_attributes_6_question_option_id",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "Please select",
+        "568627647",
+        "568627648",
+        "568627649",
+        "568627650",
+        "568627651",
+        "568627652",
+        "568627653",
+        "568627654",
+        "568627655",
+        "568627657",
+        "568627659",
+        "568627660",
+        "568627661",
+        "568627663",
+        "568627665",
+        "568627666",
+        "568627667",
+        "568627668",
+        "568627669",
+        "568627670",
+        "568627671",
+        "568627672",
+        "568627674",
+        "568627675",
+        "568627676",
+        "568627677",
+        "568627678",
+        "568627679",
+        "568627680"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_gender",
+    "op": "select",
+    "value": null,
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "job_application[gender]",
+      "id": "job_application_gender",
+      "label": "Gender",
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "Please select",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_hispanic_ethnicity",
+    "op": "select",
+    "value": "San Francisco, CA, USA",
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "job_application[hispanic_ethnicity]",
+      "id": "job_application_hispanic_ethnicity",
+      "label": "Are you Hispanic/Latino?",
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "Please select",
+        "Yes",
+        "No",
+        "Decline To Self Identify"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_race",
+    "op": "select",
+    "value": null,
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "job_application[race]",
+      "id": "job_application_race",
+      "label": "Please identify your race",
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "Please select",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_veteran_status",
+    "op": "select",
+    "value": null,
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "job_application[veteran_status]",
+      "id": "job_application_veteran_status",
+      "label": "Veteran Status",
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "Please select",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#job_application_disability_status",
+    "op": "select",
+    "value": null,
+    "field": {
+      "tag": "select",
+      "type": "select",
+      "name": "job_application[disability_status]",
+      "id": "job_application_disability_status",
+      "label": "Disability Status",
+      "placeholder": null,
+      "required": false,
+      "options": [
+        "Please select",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    "note": null
+  },
+  {
+    "selector": "#security_code",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "text",
+      "name": "security_code",
+      "id": "security_code",
+      "label": "Security Code*",
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  },
+  {
+    "selector": "#submit_app",
+    "op": "type",
+    "value": null,
+    "field": {
+      "tag": "input",
+      "type": "button",
+      "name": null,
+      "id": "submit_app",
+      "label": null,
+      "placeholder": null,
+      "required": false,
+      "options": []
+    },
+    "note": null
+  }
+]

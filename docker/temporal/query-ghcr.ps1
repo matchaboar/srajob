@@ -1,21 +1,25 @@
 $ErrorActionPreference = 'Stop'
 
-function Load-Pat {
-$root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPath))
-  $envPath = Join-Path $root '.env'
-  if (Test-Path $envPath) {
-    $line = Get-Content $envPath | Where-Object { $_ -match '^[ \t]*GHCR_PAT\s*=\s*' } | Select-Object -Last 1
-    if ($line) {
-      $pat = ($line -split '=',2)[1].Trim()
-      if ($pat.StartsWith('"') -and $pat.EndsWith('"')) { $pat = $pat.Substring(1,$pat.Length-2) }
-      return $pat
-    }
+function Get-GhcrPat {
+  $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPath))
+  # Try env first
+  if ($env:GHCR_PAT) { return $env:GHCR_PAT }
+
+  # Fallback to dotenvx get (decrypt from .env + .env.keys)
+  try {
+    Push-Location $root
+    $code = 'const dx=require("@dotenvx/dotenvx");const v=dx.get("GHCR_PAT");if(v){process.stdout.write(v);}';
+    $out = & node -e $code
+    Pop-Location
+    if ($out) { return $out.Trim() }
+  } catch {
+    Write-Verbose "dotenvx get GHCR_PAT failed: $($_.Exception.Message)"
   }
-  return $env:GHCR_PAT
+  return $null
 }
 
-$pat = Load-Pat
-if (-not $pat) { throw 'GHCR_PAT not found (env or .env)' }
+$pat = Get-GhcrPat
+if (-not $pat) { throw 'GHCR_PAT not found (env or decrypted via dotenvx)' }
 $headers = @{ Authorization = ("Bearer " + $pat); 'User-Agent'='srajob2-ci' }
 
 $pkgs = Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/orgs/temporalio/packages?package_type=container" -Method Get

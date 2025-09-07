@@ -91,7 +91,48 @@ def plan_with_rules(form: Form, resume: Dict) -> List[FillAction]:
                 return str(r[k])
         return default
 
+    def _pick_select_value(f: FormField) -> Optional[str]:
+        lab = _norm(f.label) + " " + _norm(f.name or "") + " " + _norm(f.id or "")
+        # Generic boolean selects
+        if "boolean_value" in lab or "i certify" in lab:
+            return "Yes"
+        if "privacy policy" in lab or "processed in accordance" in lab:
+            return "Yes"
+        # Work authorization (Greenhouse specific wording)
+        if "legally authorised" in lab or "legally authorized" in lab:
+            wa = _norm(rget("work_authorization") or rget("work_authorized") or "")
+            if any(k in wa for k in ["citizen", "green card", "permanent", "yes", "authorized", "authorised", "no restriction"]):
+                return "Yes, no restriction."
+            if "future" in wa or "later" in wa:
+                return "Yes, but I will need sponsorship in the future."
+            if "sponsor" in wa or "need" in wa or wa == "no":
+                return "No, I need sponsorship now."
+            return "Yes, no restriction."
+        # City availability multi-select
+        if "what cities" in lab or "available to work" in lab or f.id == "question_5":
+            return "Remote"
+        # Source: how did you hear
+        if "how did you hear" in lab:
+            return "LinkedIn (Job Posting)" if rget("linkedin") else "Other"
+        # EEOC convenience defaults
+        if "gender" in lab:
+            return "Decline To Self Identify"
+        if "hispanic" in lab:
+            return "Decline To Self Identify"
+        if "race" in lab:
+            return "Decline To Self Identify"
+        # Unknown select
+        return None
+
     for f in form.fields:
+        # Skip hidden and Greenhouse internal wiring fields
+        if f.type == "hidden":
+            continue
+        if (f.name and ("question_id" in f.name or "priority" in f.name)):
+            continue
+        if (f.id or "").lower() in {"security_code", "submit_app"}:
+            continue
+
         sel = f.selector()
         op = "type"
         value: Optional[str] = None
@@ -106,19 +147,32 @@ def plan_with_rules(form: Form, resume: Dict) -> List[FillAction]:
         else:
             op = "type"
 
-        key = _guess_key(f)
-        if key == "full_name":
-            value = rget("full_name") or " ".join(
-                filter(None, [rget("first_name"), rget("last_name")])
-            )
-        elif key:
-            value = rget(key)
+        if op != "select":
+            key = _guess_key(f)
+            if key == "full_name":
+                value = rget("full_name") or " ".join(
+                    filter(None, [rget("first_name"), rget("last_name")])
+                )
+            elif key:
+                value = rget(key)
 
         # Some convenience fallbacks
-        if not value and f.type == "email":
+        if not value and (f.type == "email" or _norm(f.label).find("email") != -1):
             value = rget("email")
-        if not value and f.type in ("tel", "phone"):
+        if not value and (f.type in ("tel", "phone") or _norm(f.label).find("phone") != -1):
             value = rget("phone")
+
+        # Textareas specific mapping
+        if not value and f.tag == "textarea":
+            lab = _norm(f.label) + " " + _norm(f.id or "")
+            if "resume" in lab or (f.id or "").lower() == "resume_text":
+                value = r.get("answers", {}).get("cover_letter") or rget("cover_letter")
+            if not value and "cover" in lab:
+                value = r.get("answers", {}).get("cover_letter") or rget("cover_letter")
+
+        # Selects: choose sensible defaults (ignore LLM/rule key guesses for selects)
+        if op == "select":
+            value = _pick_select_value(f) if not value else _pick_select_value(f) or value
 
         actions.append(
             FillAction(selector=sel, value=value, field=f, op=op)
@@ -177,4 +231,3 @@ def plan_with_llm(form: Form, resume: Dict, llm: BaseLLMClient) -> List[FillActi
         actions.append(FillAction(selector=sel, value=value, field=f, op=op))
 
     return actions
-
