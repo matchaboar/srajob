@@ -13,3 +13,5 @@ job_board_application/.env.production
 .env.keys
 node_modules
 form_filler_bot/test_pages/screenshots
+theorycraft-form/form-data/logs
+theorycraft-form/form-data

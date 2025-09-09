@@ -3,12 +3,9 @@ name = "srajob"
 version = "0.1.0"
 description = "A modern web scraping library using uv for package management"
 readme = "README.md"
-authors = [
-    { name = "matchaboar", email = "matchaboar@email.com" }
-]
+authors = [{ name = "matchaboar", email = "matchaboar@email.com" }]
 requires-python = ">=3.11"
 dependencies = [
-    "crawl4ai>=0.7.3",
     "fetchfox-sdk>=1.0.1",
     "httpx>=0.28.1",
     "pydantic>=2.11.7",
@@ -16,14 +13,21 @@ dependencies = [
     "temporalio==1.17.0",
     "browser-use>=0.7.3",
     "beautifulsoup4>=4.12.3",
+    "patchright==1.52.5",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",
+    "pytest-timeout==2.4.0",
+    "pytest-xdist==3.8.0",
     "ruff>=0.1.0",
 ]
 ai = []
+
+[tool.uv]
+add-bounds = "exact"
+exclude-newer = "2025-09-10T00:00:00Z"
 
 [tool.ruff]
 line-length = 100
@@ -41,6 +45,11 @@ warn_unused_configs = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
+addopts = "-n auto --dist loadscope"
+markers = [
+    "serial: tests that must run serially",
+]
+timeout = 120
 
 [build-system]
 requires = ["uv_build>=0.8.8,<0.9.0"]

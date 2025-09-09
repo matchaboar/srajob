@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tricky Form</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      .field { margin-bottom: 1rem; }
+      .combo { border: 1px solid #ccc; padding: 4px; width: 340px; }
+      .listbox { border: 1px solid #aaa; max-height: 140px; overflow: auto; display: none; }
+      .listbox.open { display: block; }
+      .option { padding: 4px; cursor: pointer; }
+      .option[aria-selected="true"] { background: #def; }
+      .sr-only { position: absolute; left: -10000px; }
+      .shadow-field { border: 1px dashed #bbb; padding: 8px; width: 360px; }
+      [contenteditable="true"] { border: 1px solid #ccc; min-height: 3em; padding: 6px; }
+    </style>
+  </head>
+  <body>
+    <h1>Tricky Form</h1>
+
+    <div class="field">
+      <label for="fullName">Full Name *</label><br />
+      <input id="fullName" type="text" placeholder="Enter your full name" />
+    </div>
+
+    <!-- Contenteditable textbox -->
+    <div class="field">
+      <div id="coverLabel">Cover Letter</div>
+      <div id="coverText" role="textbox" aria-labelledby="coverLabel" contenteditable="true"></div>
+    </div>
+
+    <!-- Custom Combobox built with ARIA roles; options added after delay -->
+    <div class="field">
+      <div id="cityLabel">Preferred City</div>
+      <div id="cityCombo" class="combo" role="combobox" aria-expanded="false" aria-controls="cityList" aria-labelledby="cityLabel" tabindex="0">
+        <span id="cityValue">Please select</span>
+      </div>
+      <div id="cityList" class="listbox" role="listbox" tabindex="-1" aria-labelledby="cityLabel"></div>
+    </div>
+
+    <!-- Radio group dynamically populated -->
+    <div class="field">
+      <div id="workAuthLabel">Are you legally authorized to work?</div>
+      <div id="workAuthGroup" role="radiogroup" aria-labelledby="workAuthLabel"></div>
+    </div>
+
+    <!-- Shadow DOM text input -->
+    <div class="field">
+      <div>LinkedIn Profile</div>
+      <x-text aria-label="LinkedIn Profile" class="shadow-field"></x-text>
+    </div>
+
+    <!-- Button within a field container -->
+    <div class="field" role="group" aria-label="Attachment">
+      <div>Attachment</div>
+      <button type="button" id="attachBtn">Upload Resume</button>
+    </div>
+
+    <script>
+      // Shadow DOM definition
+      class XText extends HTMLElement {
+        constructor() {
+          super();
+          const root = this.attachShadow({ mode: 'open' });
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.setAttribute('aria-label', this.getAttribute('aria-label') || 'Text');
+          input.style.width = '340px';
+          root.appendChild(input);
+        }
+      }
+      customElements.define('x-text', XText);
+
+      // Simple combobox behavior
+      const combo = document.getElementById('cityCombo');
+      const list = document.getElementById('cityList');
+      const valueSpan = document.getElementById('cityValue');
+      function toggleList(open) {
+        combo.setAttribute('aria-expanded', open ? 'true' : 'false');
+        list.classList.toggle('open', !!open);
+      }
+      combo.addEventListener('click', () => toggleList(list.classList.contains('open') ? false : true));
+      combo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleList(!list.classList.contains('open')); }
+      });
+
+      // Dynamically populate options after a delay
+      setTimeout(() => {
+        const options = ['Please select', 'San Francisco', 'New York', 'Remote'];
+        for (const text of options) {
+          const opt = document.createElement('div');
+          opt.className = 'option';
+          opt.setAttribute('role', 'option');
+          opt.setAttribute('tabindex', '-1');
+          opt.textContent = text;
+          opt.addEventListener('click', () => {
+            valueSpan.textContent = text;
+            toggleList(false);
+          });
+          list.appendChild(opt);
+        }
+      }, 600);
+
+      // Dynamically populate radio group
+      setTimeout(() => {
+        const group = document.getElementById('workAuthGroup');
+        const choices = ['Yes', 'No'];
+        choices.forEach((c, i) => {
+          const lbl = document.createElement('label');
+          const r = document.createElement('input');
+          r.type = 'radio';
+          r.name = 'workauth';
+          r.setAttribute('role', 'radio');
+          r.setAttribute('aria-checked', 'false');
+          r.tabIndex = i === 0 ? 0 : -1;
+          lbl.appendChild(r);
+          lbl.appendChild(document.createTextNode(' ' + c));
+          group.appendChild(lbl);
+        });
+      }, 400);
+
+      // Prevent accidental submit
+      document.addEventListener('submit', (e) => e.preventDefault());
+    </script>
+  </body>
+  </html>
+

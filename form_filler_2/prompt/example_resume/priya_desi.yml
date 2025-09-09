@@ -1,0 +1,151 @@
+name: Priya Desai
+email: priya.desai@protonmail.com
+phone: 415-930-2216
+github_short_uri: github.com/priyadesai-codes
+professional_experience:
+  title: Professional Experience
+  exclude_company_list:
+    - Bright Pixel Studio
+    - HealthBridge Labs
+  job_list:
+    - job_title: Senior Software Engineer
+      company: Atlassian Pty Ltd
+      start_date: 01/08/2024
+      end_date: Present
+      job_description:
+        - >-
+          Designed an offline-first sync engine for Jira Mobile using CRDT-based conflict resolution and
+          delta streaming over WebSockets, reducing sync failures by 82% in poor network conditions.
+        - >-
+          Built a cross-product notification pipeline powered by Kafka and Debezium CDC, enabling
+          consistent, de-duplicated alerts across Jira, Confluence, and Bitbucket.
+        - >-
+          Rolled out a federated GraphQL gateway consolidating 18 services, introducing schema composition,
+          type-safe clients, and request-level caching for high-traffic queries.
+        - >-
+          Prototyped an embedding-backed issue triage assistant to suggest labels, components, and owners,
+          cutting manual triage time by 40% for beta teams.
+      skills:
+        - TypeScript
+        - GraphQL
+        - Kafka
+        - WebSockets
+        - PostgreSQL
+        - Kubernetes
+        - AWS
+        - Node.js
+    - job_title: Software Engineer II
+      company: Twilio Inc.
+      start_date: 09/13/2021
+      end_date: 12/15/2023
+      job_description:
+        - >-
+          Implemented geo-aware SMS routing with probabilistic carrier fallback and real-time delivery
+          scoring, increasing deliverability in LATAM by 6.7%.
+        - >-
+          Developed a template experimentation service to A/B test message copy and sender strategy at
+          scale while maintaining 10DLC compliance and opt-out enforcement.
+        - >-
+          Built a spend guardrail and anomaly detector using streaming features and seasonal baselines,
+          automatically throttling suspicious traffic within 90 seconds.
+      skills:
+        - Go
+        - Python
+        - Redis
+        - Kafka
+        - FastAPI
+        - Terraform
+        - Prometheus
+        - 10DLC Compliance
+    - job_title: Full-Stack Engineer
+      company: Capital One
+      start_date: 05/04/2020
+      end_date: 08/27/2021
+      job_description:
+        - >-
+          Created a declarative forms engine for dispute submissions with server-driven UI schemas,
+          enabling product teams to ship new flows without frontend releases.
+        - >-
+          Introduced a GraphQL BFF for card-servicing apps with field-level authorization and audit trails,
+          simplifying data access across legacy domains.
+        - >-
+          Implemented synthetic monitoring and chaos experiments for critical journeys, cutting MTTR by
+          28% and surfacing hidden dependency failures.
+      skills:
+        - Java 11
+        - Spring Boot
+        - GraphQL
+        - React
+        - OpenAPI
+        - Jest
+        - Splunk
+        - Chaos Engineering
+    - job_title: Systems Engineer - Virtualization
+      company: Dell Technologies
+      start_date: 06/22/2015
+      end_date: 04/30/2020
+      job_description:
+        - >-
+          Automated ESXi cluster lifecycle with Ansible and PowerCLI, including image compliance, host
+          remediation, and staged patch windows across 300+ nodes.
+        - >-
+          Designed NSX-T microsegmentation policies and blue/green DR runbooks, achieving consistent
+          recovery points for regulated workloads.
+        - >-
+          Built a capacity planner correlating vCenter metrics with hardware shipment SLAs to predict
+          saturation 90 days out and trigger procurement workflows.
+      skills:
+        - VMware vSphere
+        - NSX-T
+        - PowerCLI
+        - Ansible
+        - Bash
+        - vRealize Operations
+        - ITIL
+        - CMDB
+    - job_title: Front-End Developer
+      company: Bright Pixel Studio
+      start_date: 01/05/2015
+      end_date: 05/12/2015
+      job_description:
+        - >-
+          Developed WebGL product configurators for retail clients with GPU-accelerated rendering and
+          graceful fallbacks for low-end devices.
+        - >-
+          Delivered a JAMstack e-commerce stack with a headless CMS, static generation, and edge caching,
+          improving TTFB and Core Web Vitals.
+      skills:
+        - JavaScript
+        - WebGL
+        - Three.js
+        - HTML
+        - CSS
+        - JAMstack
+        - Accessibility
+    - job_title: IT Support Intern
+      company: HealthBridge Labs
+      start_date: 08/18/2014
+      end_date: 12/10/2014
+      job_description:
+        - >-
+          Built lightweight RPA scripts to automate account provisioning and badge activations, cutting
+          onboarding time by 35%.
+        - >-
+          Deployed a barcode-based inventory process for loaner devices with weekly reconciliation and
+          tamper-evident audits.
+      skills:
+        - PowerShell
+        - Windows
+        - Active Directory
+        - RPA
+education:
+  - college: University of California, San Diego
+    degree_type: B.S.
+    degree: Computer Science
+  - college: Georgia Institute of Technology
+    degree_type: M.S.
+    degree: Analytics
+interests:
+  - distance running
+  - urban sketching
+  - cooking regional Indian cuisine
