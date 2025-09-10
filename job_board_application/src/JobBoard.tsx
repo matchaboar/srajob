@@ -3,6 +3,8 @@ import { usePaginatedQuery, useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import ResumeEditor from "./components/ResumeEditor";
+import DataDrawer from "./components/DataDrawer";
 
 type Level = "junior" | "mid" | "senior" | "staff";
 
@@ -15,7 +17,7 @@ interface Filters {
 }
 
 export function JobBoard() {
-  const [activeTab, setActiveTab] = useState<"jobs" | "applied" | "live">("jobs");
+  const [activeTab, setActiveTab] = useState<"jobs" | "applied" | "ai" | "live">("jobs");
   const [filters, setFilters] = useState<Filters>({
     search: "",
     remote: null,
@@ -61,7 +63,9 @@ export function JobBoard() {
 
   const recentJobs = useQuery(api.jobs.getRecentJobs);
   const appliedJobs = useQuery(api.jobs.getAppliedJobs);
+  const aiApplications = useQuery((api as any).formFiller.listUserAIApplications, {} as any);
   const applyToJob = useMutation(api.jobs.applyToJob);
+  const queueAIApplication = useMutation((api as any).formFiller.queueApplication);
   const rejectJob = useMutation(api.jobs.rejectJob);
   const withdrawApplication = useMutation(api.jobs.withdrawApplication);
 
@@ -70,42 +74,42 @@ export function JobBoard() {
       // Ignore if already animating
       if (exitingJobs[jobId]) return;
 
-      // Mark as exiting with apply animation
-      setExitingJobs(prev => ({ ...prev, [jobId]: "apply" }));
-      
-      // Wait for slide animation to complete, then remove from list
-      setTimeout(() => {
-        setLocallyAppliedJobs(prev => new Set([...prev, jobId]));
+      if (type === "manual") {
+        // Mark as exiting with apply animation
+        setExitingJobs(prev => ({ ...prev, [jobId]: "apply" }));
+        // Wait for slide animation to complete, then remove from list
+        setTimeout(() => {
+          setLocallyAppliedJobs(prev => new Set([...prev, jobId]));
+          setExitingJobs(prev => {
+            const copy = { ...prev };
+            delete copy[jobId];
+            return copy;
+          });
+        }, 600);
+        await applyToJob({ jobId: jobId as any, type });
+        toast.success(`Applied to job successfully!`);
+        window.open(url, "_blank");
+      } else {
+        // Queue AI application in Convex; worker will pick it up
+        await queueAIApplication({ jobId: jobId as any, jobUrl: url } as any);
+        toast.success("Queued for AI application");
+        setActiveTab("ai");
+      }
+    } catch (error) {
+      // Revert animation if mutation failed
+      if (type === "manual") {
         setExitingJobs(prev => {
           const copy = { ...prev };
           delete copy[jobId];
           return copy;
         });
-      }, 600); // Slightly longer than animation duration for smooth exit
-      
-      await applyToJob({ jobId: jobId as any, type });
-      toast.success(`Applied to job successfully!`);
-      
-      // Open the appropriate link
-      if (type === "manual") {
-        window.open(url, "_blank");
-      } else {
-        // AI Apply placeholder - would integrate with AI application system
-        toast.info("AI application feature coming soon!");
+        setLocallyAppliedJobs(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(jobId);
+          return newSet;
+        });
       }
-    } catch (error) {
-      // Revert animation if mutation failed
-      setExitingJobs(prev => {
-        const copy = { ...prev };
-        delete copy[jobId];
-        return copy;
-      });
-      setLocallyAppliedJobs(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(jobId);
-        return newSet;
-      });
-      toast.error("Failed to apply to job");
+      toast.error(type === "manual" ? "Failed to apply to job" : "Failed to queue AI application");
     }
   };
 
@@ -354,6 +358,10 @@ export function JobBoard() {
   );
   };
 
+  // Drawer state for viewing filled data
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerItem, setDrawerItem] = useState<any | null>(null);
+
   return (
     <div className="max-w-7xl mx-auto p-6">
       {/* Tabs */}
@@ -379,6 +387,21 @@ export function JobBoard() {
           Applied Jobs {appliedJobs && appliedList.length > 0 && (
             <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
               {appliedList.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("ai")}
+          className={`px-4 py-2 rounded-md font-medium transition-colors ${
+            activeTab === "ai"
+              ? "bg-white text-primary shadow-sm"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          AI Applied
+          {aiApplications && (aiApplications as any[]).length > 0 && (
+            <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+              {(aiApplications as any[]).length}
             </span>
           )}
         </button>
@@ -567,6 +590,77 @@ export function JobBoard() {
               </div>
             )}
           </div>
+        </div>
+      ) : activeTab === "ai" ? (
+        /* AI Applied Tab */
+        <div className="bg-white rounded-lg shadow-sm">
+          <div className="p-4 border-b flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">AI Applied Jobs</h2>
+            <div className="flex items-center gap-2">
+              <ResumeEditor />
+            </div>
+          </div>
+          <div className="divide-y">
+            {(aiApplications || []).map((item: any) => (
+              <div key={item._id} className="px-3 py-2">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold text-gray-900">{item.job?.title || item.jobUrl}</span>
+                      {item.job?.level && (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">{item.job.level}</span>
+                      )}
+                      {item.job?.remote && (
+                        <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">Remote</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-700 font-medium">{item.job?.company || ""}</p>
+                    <p className="text-sm text-gray-600">{item.job?.location || ""}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`px-2 py-1 text-xs rounded-md ${
+                      item.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      item.status === 'running' ? 'bg-yellow-100 text-yellow-800' :
+                      item.status === 'pending' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {item.status.toUpperCase()}
+                    </span>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Queued {new Date(item.queuedAt).toLocaleString()}
+                    </div>
+                    {item.completedAt && (
+                      <div className="text-xs text-gray-500">Completed {new Date(item.completedAt).toLocaleString()}</div>
+                    )}
+                    {item.error && (
+                      <div className="text-xs text-red-600 mt-1 truncate max-w-[240px]" title={item.error}>Error: {item.error}</div>
+                    )}
+                    {item.status === 'completed' && (
+                      <div className="mt-2">
+                        <button
+                          onClick={() => { setDrawerItem(item); setDrawerOpen(true); }}
+                          className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                          View Data
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {(aiApplications?.length || 0) === 0 && (
+              <div className="p-8 text-center">
+                <p className="text-gray-500">No AI applications yet.</p>
+              </div>
+            )}
+          </div>
+          <DataDrawer
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            title={drawerItem?.job?.title || 'Filled Data'}
+            data={drawerItem?.filledData || null}
+            logs={drawerItem?.logs || null}
+          />
         </div>
       ) : (
         /* Live Feed Tab */

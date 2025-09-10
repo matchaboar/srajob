@@ -16,3 +16,5 @@ form_filler_bot/test_pages/screenshots
 theorycraft-form/form-data/logs
 theorycraft-form/form-data
 theorycraft-form/output/logs
+tests/test-artifacts/datadog/logs
+tests/test-artifacts/tricky/logs

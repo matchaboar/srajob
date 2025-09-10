@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "local-app": "dotenvx run -- pwsh -NoLogo -NoProfile -File local-app.ps1"
+  },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.49.0"
   }

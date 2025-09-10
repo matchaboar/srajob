@@ -1,16 +1,42 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/src/index.css" />
 
-    <title>Chef</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/src/index.css" />
 
-    <meta property="og:image" content="/og-preview.png" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <title>Chef</title>
+
+  <meta property="og:image" content="/og-preview.png" />
+</head>
+
+<body>
+  <noscript>
+    <style>
+      .nojs { font-family: ui-sans-serif, system-ui; padding: 16px; color: #111827; }
+    </style>
+    <div class="nojs">
+      JavaScript is required to run the UI. Please enable it.
+    </div>
+  </noscript>
+  <div id="root"></div>
+  <script>
+    // Minimal runtime error surface so a hard failure isn't just a blank page
+    (function(){
+      function show(msg){
+        try{
+          var el=document.createElement('pre');
+          el.style.cssText='white-space:pre-wrap;padding:12px;margin:8px;border:1px solid #fee;background:#fef2f2;color:#991b1b;font-family:ui-monospace,Menlo,monospace;font-size:12px;';
+          el.textContent='UI runtime error:\n' + msg;
+          document.body.appendChild(el);
+        }catch(e){/* ignore */}
+      }
+      window.addEventListener('error', function(e){ if(e && e.message){ show(e.message); } });
+      window.addEventListener('unhandledrejection', function(e){ if(e && e.reason){ show(String(e.reason)); } });
+    })();
+  </script>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

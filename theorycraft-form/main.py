@@ -535,6 +535,42 @@ def collect_form_labels(
 
         def _map_resume_value(field_name: str, role: str, options: list[str], rdict: dict) -> str:
             n = field_name.lower()
+            # Basic identity/contact mapping
+            try:
+                full_name = str((resume_data or {}).get("name") or "").strip()
+                first_name = full_name.split()[0] if full_name else ""
+                last_name = full_name.split()[-1] if full_name else ""
+                email_val = str((resume_data or {}).get("email") or "").strip()
+                phone_val = str((resume_data or {}).get("phone") or "").strip()
+                github_uri = str((resume_data or {}).get("github_uri") or "").strip()
+                linkedin_uri = str((resume_data or {}).get("linkedin_uri") or "").strip()
+                def _ensure_url(u: str) -> str:
+                    if not u:
+                        return u
+                    if u.startswith("http://") or u.startswith("https://"):
+                        return u
+                    return f"https://{u}"
+            except Exception:
+                full_name = first_name = last_name = email_val = phone_val = github_uri = linkedin_uri = ""
+
+            if "first name" in n:
+                return first_name
+            if "last name" in n:
+                return last_name
+            if ("full name" in n) or (n.strip() == "name"):
+                return full_name
+            if "email" in n:
+                return email_val
+            if "phone" in n or "mobile" in n:
+                return phone_val
+            if "linkedin" in n:
+                return _ensure_url(linkedin_uri)
+            if "github" in n:
+                return _ensure_url(github_uri)
+            if "website" in n or "portfolio" in n:
+                # Prefer a personal website; fallback to GitHub/LinkedIn in that order
+                site = (resume_data or {}).get("website") or github_uri or linkedin_uri
+                return _ensure_url(str(site or ""))
             # Work authorization / visa mapping
             if "authoris" in n or "authoriz" in n or "visa" in n or "sponsor" in n or "work permit" in n or "eligib" in n:
                 status = str(rdict.get("work_visa_status", "")).lower()

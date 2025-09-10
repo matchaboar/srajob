@@ -71,10 +71,30 @@ const applicationTables = {
 
   form_fill_queue: defineTable({
     userId: v.id("users"),
+    jobId: v.id("jobs"),
     jobUrl: v.string(),
-    status: v.union(v.literal("pending"), v.literal("completed")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("error"),
+    ),
     queuedAt: v.number(),
-  }).index("by_user", ["userId"]),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    error: v.optional(v.string()),
+    filledData: v.optional(v.any()),
+    logs: v.optional(
+      v.object({
+        fieldsYaml: v.optional(v.string()),
+        fillLogYaml: v.optional(v.string()),
+        screenshot: v.optional(v.string()),
+      })
+    ),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status", "queuedAt"]) // for worker lease
+    .index("by_user_and_status", ["userId", "status", "queuedAt"]),
 };
 
 export default defineSchema({

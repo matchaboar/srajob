@@ -35,7 +35,7 @@ class ScrapeWorkflow:
         while True:
             site = await workflow.execute_activity(
                 lease_site,
-                "scraper-worker",  # logical worker id; replace if needed
+                args=["scraper-worker"],  # logical worker id; replace if needed
                 schedule_to_close_timeout=workflow.timedelta(seconds=30),
             )
 
@@ -47,12 +47,12 @@ class ScrapeWorkflow:
             try:
                 res = await workflow.execute_activity(
                     scrape_site,
-                    site,
+                    args=[site],
                     start_to_close_timeout=workflow.timedelta(minutes=10),
                 )
                 scrape_id = await workflow.execute_activity(
                     store_scrape,
-                    res,
+                    args=[res],
                     schedule_to_close_timeout=workflow.timedelta(seconds=30),
                 )
                 scrape_ids.append(scrape_id)
@@ -60,15 +60,14 @@ class ScrapeWorkflow:
                 # Mark site completed so next lease skips it
                 await workflow.execute_activity(
                     complete_site,
-                    site["_id"],
+                    args=[site["_id"]],
                     schedule_to_close_timeout=workflow.timedelta(seconds=30),
                 )
             except Exception as e:  # noqa: BLE001
                 # On failure, record and release the lock for retry after TTL or immediately
                 await workflow.execute_activity(
                     fail_site,
-                    site["_id"],
-                    str(e),
+                    args=[site["_id"], str(e)],
                     schedule_to_close_timeout=workflow.timedelta(seconds=30),
                 )
 

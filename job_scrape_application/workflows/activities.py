@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, TypedDict
 
 import httpx
 from fetchfox_sdk import FetchFox
+from temporalio import activity
 
 from .config import settings
 
@@ -22,6 +23,7 @@ class Site(TypedDict, total=False):
     completed: Optional[bool]
 
 
+@activity.defn
 async def fetch_sites() -> List[Site]:
     # Allow default fallback for tests when env var is not set
     base = (settings.convex_http_url or "http://local").rstrip("/")
@@ -35,6 +37,7 @@ async def fetch_sites() -> List[Site]:
         return data  # type: ignore[return-value]
 
 
+@activity.defn
 async def lease_site(worker_id: str, lock_seconds: int = 300) -> Optional[Site]:
     # Allow default fallback for tests when env var is not set
     base = (settings.convex_http_url or "http://local").rstrip("/")
@@ -50,6 +53,7 @@ async def lease_site(worker_id: str, lock_seconds: int = 300) -> Optional[Site]:
         return data  # type: ignore[return-value]
 
 
+@activity.defn
 def scrape_site(site: Site) -> Dict[str, Any]:
     if not settings.fetchfox_api_key:
         raise RuntimeError("FETCHFOX_API_KEY env var is required for FetchFox")
@@ -93,6 +97,7 @@ def scrape_site(site: Site) -> Dict[str, Any]:
     }
 
 
+@activity.defn
 async def store_scrape(scrape: Dict[str, Any]) -> str:
     # Allow default fallback for tests when env var is not set
     base = (settings.convex_http_url or "http://local").rstrip("/")
@@ -104,6 +109,7 @@ async def store_scrape(scrape: Dict[str, Any]) -> str:
         return str(data.get("scrapeId"))
 
 
+@activity.defn
 async def complete_site(site_id: str) -> None:
     # Allow default fallback for tests when env var is not set
     base = (settings.convex_http_url or "http://local").rstrip("/")
@@ -114,6 +120,7 @@ async def complete_site(site_id: str) -> None:
         _ = resp.json()
 
 
+@activity.defn
 async def fail_site(site_id: str, error: Optional[str] = None) -> None:
     # Allow default fallback for tests when env var is not set
     base = (settings.convex_http_url or "http://local").rstrip("/")

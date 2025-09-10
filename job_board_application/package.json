@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "dotenvx run -- npm-run-all --parallel dev:frontend dev:backend",
-    "dev:frontend": "vite --open",
-    "dev:backend": "dotenvx run -- convex dev",
+    "dev": "npm-run-all --parallel dev:frontend",
+    "dev:frontend": "node scripts/sync-env.mjs && vite --open",
+    "dev:backend": "dotenvx run -f ../.env -- convex dev",
     "build": "dotenvx run -- vite build",
     "lint": "dotenvx run -- tsc -p convex -noEmit --pretty false && dotenvx run -- tsc -p . -noEmit --pretty false && dotenvx run -- convex dev --once && dotenvx run -- vite build"
   },

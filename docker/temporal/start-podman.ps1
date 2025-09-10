@@ -15,15 +15,20 @@ function Ensure-Command($name) {
 }
 
 function Ensure-PodmanRunning() {
-  # Ensure a machine exists and is running without mutating settings when running
+  # On Linux, podman runs natively and "podman machine" is unnecessary/unsupported.
+  if ($IsLinux) { return }
+  # Ensure a machine exists and is running on macOS/Windows
   try {
     podman machine inspect | Out-Null
   } catch {
-    # No machine; init and start
-    podman machine init --now | Out-Null
-    return
+    try {
+      podman machine init --now | Out-Null
+      return
+    } catch {
+      Write-Warning "podman machine init not supported or failed; continuing"
+      return
+    }
   }
-  # Check running state
   try {
     $listJson = podman machine list --format json
     $machines = $listJson | ConvertFrom-Json
@@ -33,7 +38,6 @@ function Ensure-PodmanRunning() {
       podman machine start | Out-Null
     }
   } catch {
-    # Fallback: try to start, ignore "already running"
     try { podman machine start | Out-Null } catch {}
   }
 }
@@ -43,12 +47,23 @@ function Ensure-Network($netName) {
   if ($LASTEXITCODE -ne 0) { podman network create $netName | Out-Null }
 }
 
+function Test-TcpPort($hostname, $port, $timeoutMs = 1000) {
+  try {
+    $client = [System.Net.Sockets.TcpClient]::new()
+    $iar = $client.BeginConnect($hostname, [int]$port, $null, $null)
+    $completed = $iar.AsyncWaitHandle.WaitOne($timeoutMs)
+    if (-not $completed) { $client.Close(); return $false }
+    $client.EndConnect($iar)
+    $client.Close()
+    return $true
+  } catch {
+    return $false
+  }
+}
+
 function Wait-Port($hostname, $port, $retries=60, $delaySeconds=1) {
   for($i=0;$i -lt $retries;$i++){
-    try {
-      $ok = (Test-NetConnection -ComputerName $hostname -Port $port -WarningAction SilentlyContinue).TcpTestSucceeded
-      if ($ok) { return }
-    } catch {}
+    if (Test-TcpPort $hostname $port 1000) { return }
     Start-Sleep -Seconds $delaySeconds
   }
   throw "Timeout waiting for $($hostname):$port to be reachable"
@@ -111,8 +126,13 @@ function Build-TemporalDevImage {
   $args += @('-t','temporal-dev:local','-f', $df, $ctx)
 
   $ts = Get-Date -Format 'yyyyMMdd_HHmmss'
-  $logOut = Join-Path $env:TEMP "temporal_build_${ts}.out.log"
-  $logErr = Join-Path $env:TEMP "temporal_build_${ts}.err.log"
+  # Cross-platform temp directory resolution
+  $tempDir = $env:TEMP
+  if (-not $tempDir -or [string]::IsNullOrWhiteSpace($tempDir)) { $tempDir = $env:TMP }
+  if (-not $tempDir -or [string]::IsNullOrWhiteSpace($tempDir)) { $tempDir = $env:TMPDIR }
+  if (-not $tempDir -or [string]::IsNullOrWhiteSpace($tempDir)) { $tempDir = [System.IO.Path]::GetTempPath() }
+  $logOut = Join-Path $tempDir "temporal_build_${ts}.out.log"
+  $logErr = Join-Path $tempDir "temporal_build_${ts}.err.log"
   $proc = Start-Process -FilePath 'podman' -ArgumentList ($args -join ' ') -NoNewWindow -RedirectStandardOutput $logOut -RedirectStandardError $logErr -PassThru
   $deadline = (Get-Date).AddSeconds($BuildTimeoutSeconds)
   while (-not $proc.HasExited -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 1 }
@@ -132,17 +152,105 @@ function Build-TemporalDevImage {
   if ($proc.ExitCode -ne 0) { throw "podman build failed with exit code $($proc.ExitCode)" }
 }
 
-Build-TemporalDevImage
-
-# Start Temporal dev server (single container provides server + UI)
-if (-not (podman ps -a --format '{{.Names}}' | Select-String -SimpleMatch '^temporalite$')) {
-  podman run -d --network $net --name temporalite -p 7233:7233 -p 8233:8233 temporal-dev:local | Out-Null
+function Ensure-TemporalCLI() {
+  $cmd = Get-Command temporal -ErrorAction SilentlyContinue
+  if ($cmd) { return $cmd.Path }
+  Write-Host "Installing Temporal CLI locally (user scope)..."
+  try {
+    bash -lc "curl -sSf https://temporal.download/cli.sh | sh" | Out-Null
+  } catch {
+    throw "Failed to install Temporal CLI: $($_.Exception.Message)"
+  }
+  # Try common install locations without requiring PATH update
+  $userHome = $env:HOME
+  if (-not $userHome -or [string]::IsNullOrWhiteSpace($userHome)) { $userHome = [Environment]::GetFolderPath('UserProfile') }
+  $candidates = @(
+    (Join-Path $userHome ".temporalio/bin/temporal"),
+    (Join-Path $userHome ".local/bin/temporal")
+  )
+  foreach ($c in $candidates) { if (Test-Path $c) { return $c } }
+  $cmd2 = Get-Command temporal -ErrorAction SilentlyContinue
+  if ($cmd2) { return $cmd2.Path }
+  throw "Temporal CLI not found on PATH after install"
 }
 
-Wait-Port 127.0.0.1 7233
+function Start-TemporalHost([switch]$RunCheck, [int]$HealthCheckTimeoutSeconds, [switch]$SkipOpenUI) {
+  $temporalExe = Ensure-TemporalCLI
+  Write-Host "Starting Temporal dev on host..."
+  $job = Start-Job -ScriptBlock { param($exe) & $exe server start-dev --ip 127.0.0.1 } -ArgumentList $temporalExe
+  try {
+    Wait-Port 127.0.0.1 7233
+    Write-Host "Temporal UI: http://127.0.0.1:8233"
+    Write-Host "Temporal Frontend (Temporal Dev): 127.0.0.1:7233"
+    if ($RunCheck) {
+      # Run same real-server check with timeout
+      $env:TEMPORAL_ADDRESS = $env:TEMPORAL_ADDRESS -as [string]
+      if (-not $env:TEMPORAL_ADDRESS) { $env:TEMPORAL_ADDRESS = '127.0.0.1:7233' }
+      if (-not $env:TEMPORAL_NAMESPACE) { $env:TEMPORAL_NAMESPACE = 'default' }
+      if (-not $env:CONVEX_HTTP_URL) { throw 'Set CONVEX_HTTP_URL (.convex.site) before running the check' }
+      $script = 'uv run python -m job_scrape_application.workflows.temporal_real_server_check'
+      $hc = Start-Job -ScriptBlock { param($cmd) pwsh -NoLogo -NoProfile -Command $cmd } -ArgumentList $script
+      if (-not (Wait-Job $hc -Timeout $HealthCheckTimeoutSeconds)) {
+        Stop-Job $hc -Force | Out-Null
+        Receive-Job $hc -Keep | Out-String | Write-Output
+        throw "Health check timed out after $HealthCheckTimeoutSeconds seconds"
+      }
+      $out = Receive-Job $hc -Keep | Out-String
+      Write-Output $out
+      Remove-Job $hc -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+  } finally {
+    # Stop the dev server to avoid long-running process
+    try { Stop-Job $job -Force | Out-Null } catch {}
+    try { Receive-Job $job -Keep | Out-String | Out-Null } catch {}
+    Remove-Job $job -Force -ErrorAction SilentlyContinue | Out-Null
+  }
+}
 
-Write-Host "Temporal UI: http://127.0.0.1:8233"
-Write-Host "Temporal Frontend (Temporal Dev): 127.0.0.1:7233"
+function Start-TemporalViaPodman() {
+  $ok = $false
+  $existing = podman ps -a --format '{{.Names}}'
+  if ($LASTEXITCODE -ne 0) { return $false }
+  $has = $false
+  foreach ($n in $existing) { if ($n -eq 'temporalite') { $has = $true; break } }
+  if ($has) {
+    $state = (podman inspect temporalite -f '{{.State.Status}}' 2>$null)
+    if ($LASTEXITCODE -eq 0 -and $state -eq 'running') { $ok = $true }
+    if (-not $ok) {
+      $null = (podman start temporalite 2>&1)
+      if ($LASTEXITCODE -ne 0) {
+        $null = (podman rm -f temporalite 2>&1)
+        $null = (podman run -d --replace --network $net --name temporalite -p 7233:7233 -p 8233:8233 temporal-dev:local 2>&1)
+        if ($LASTEXITCODE -eq 0) { $ok = $true }
+      } else { $ok = $true }
+    }
+  } else {
+    $null = (podman run -d --replace --network $net --name temporalite -p 7233:7233 -p 8233:8233 temporal-dev:local 2>&1)
+    if ($LASTEXITCODE -eq 0) { $ok = $true }
+  }
+  if ($ok) {
+    Wait-Port 127.0.0.1 7233
+    Write-Host "Temporal UI: http://127.0.0.1:8233"
+    Write-Host "Temporal Frontend (Temporal Dev): 127.0.0.1:7233"
+  }
+  return $ok
+}
+
+Build-TemporalDevImage
+
+# Try Podman first; if networking backend (netavark) is missing, fall back to host-run
+$started = $false
+try {
+  $started = Start-TemporalViaPodman
+} catch {
+  $started = $false
+}
+if (-not $started) {
+  Write-Warning "Podman start failed (likely missing netavark). Falling back to host-run."
+  Start-TemporalHost -RunCheck:$RunCheck -HealthCheckTimeoutSeconds $HealthCheckTimeoutSeconds -SkipOpenUI:$SkipOpenUI
+  # Host-run already performed optional health check and cleaned up; exit script here
+  return
+}
 
 # Optionally open Temporal UI in default browser (skip on CI/headless)
 $isHeadless = $false

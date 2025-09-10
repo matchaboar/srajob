@@ -430,7 +430,7 @@ http.route({
   method: "POST",
   handler: httpAction(async (ctx, request) => {
     const body = await request.json();
-    await ctx.runMutation(api.formFiller.queueApplication, { jobUrl: body.jobUrl });
+    await ctx.runMutation(api.formFiller.queueApplication, { jobId: body.jobId, jobUrl: body.jobUrl });
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -449,6 +449,115 @@ http.route({
   handler: httpAction(async (ctx) => {
     const next = await ctx.runQuery(api.formFiller.nextApplication, {});
     return new Response(JSON.stringify(next), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+/**
+ * System-only endpoints for the AI form fill worker
+ */
+http.route({
+  path: "/api/form-fill/lease",
+  method: "POST",
+  handler: httpAction(async (ctx) => {
+    const leased = await ctx.runMutation(api.formFiller.leaseNextPending, {});
+    return new Response(JSON.stringify(leased), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+http.route({
+  path: "/api/form-fill/complete",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+    await ctx.runMutation(api.formFiller.completeJob, {
+      id: body.id,
+      filledData: body.filledData ?? null,
+      logs: body.logs ?? undefined,
+    });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+http.route({
+  path: "/api/form-fill/error",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+    await ctx.runMutation(api.formFiller.failJob, { id: body.id, error: body.error || "Unknown error" });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+// Queue recent jobs for a specific user (system endpoint)
+http.route({
+  path: "/api/form-fill/queue-user-jobs",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+    const userId = body.userId as Id<"users">;
+    const limit = typeof body.limit === "number" ? body.limit : undefined;
+    const onlyUnqueued = body.onlyUnqueued !== false; // default true
+    const res = await ctx.runMutation(api.formFiller.queueJobsForUser, {
+      userId,
+      limit,
+      onlyUnqueued,
+    });
+    return new Response(JSON.stringify(res), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
+// System-only: reset stale running items back to pending
+http.route({
+  path: "/api/form-fill/reset-stale",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const body = await request.json();
+      const maxAgeSeconds = typeof body.maxAgeSeconds === "number" ? body.maxAgeSeconds : undefined;
+      const res = await ctx.runMutation(api.formFiller.resetStaleRunning, { maxAgeSeconds });
+      return new Response(JSON.stringify(res), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }),
+});
+
+http.route({
+  path: "/api/ai-resume",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const userId = url.searchParams.get("userId");
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "Missing userId" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    // Convex IDs are strings here
+    const resume = await ctx.runQuery(api.formFiller.getResumeByUser, { userId: userId as any });
+    return new Response(JSON.stringify({ data: resume }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

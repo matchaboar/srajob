@@ -40,4 +40,10 @@ window.addEventListener('message', async (message) => {
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    // Fix the dev server port so it never auto-increments
+    host: "0.0.0.0",
+    port: 5173,
+    strictPort: true,
+  },
 }));

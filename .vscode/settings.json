@@ -9,5 +9,6 @@
         "**/__pycache__": true,
         "**/.mypy_cache": true,
         "**/.pytest_cache": true,
-    }
+    },
+    "remote.autoForwardPortsFallback": 0
 }

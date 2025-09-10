@@ -27,14 +27,13 @@ class ScrapeWorkflowTest:
         for site in sites:
             res = await workflow.execute_activity(
                 "scrape_site",
-                site,
+                args=[site],
                 start_to_close_timeout=workflow.timedelta(seconds=30),
             )
             scrape_id = await workflow.execute_activity(
                 "store_scrape",
-                res,
+                args=[res],
                 schedule_to_close_timeout=workflow.timedelta(seconds=30),
             )
             scrape_ids.append(scrape_id)
         return ScrapeSummary(site_count=len(sites), scrape_ids=scrape_ids)
-

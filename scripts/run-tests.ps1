@@ -53,8 +53,50 @@ function Run-WithTimeout([string]$Command, [int]$Seconds) {
   }
 }
 
+function Ensure-ConvexHttpUrl {
+  # If already set and not a placeholder, keep it
+  if ($env:CONVEX_HTTP_URL -and ($env:CONVEX_HTTP_URL -notmatch '<your-deployment>')) { return }
+
+  $appDir = Join-Path $repoRoot 'job_board_application'
+  $appEnvLocal = Join-Path $appDir '.env.local'
+
+  function _Extract-And-Set($path) {
+    if (-not (Test-Path $path)) { return $false }
+    $lines = Get-Content -Path $path
+    # Prefer VITE_CONVEX_URL if present
+    $vite = ($lines | Where-Object { $_ -match '^[ ]*VITE_CONVEX_URL[ ]*=\s*(.+)$' } | Select-Object -First 1)
+    if ($vite) {
+      $val = ($vite -replace '^[ ]*VITE_CONVEX_URL[ ]*=\s*', '').Trim()
+      if ($val.EndsWith('.convex.cloud')) { $val = $val -replace '\\.convex\\.cloud$', '.convex.site' }
+      $env:CONVEX_HTTP_URL = $val
+      return $true
+    }
+    # Fallback to CONVEX_DEPLOYMENT slug
+    $dep = ($lines | Where-Object { $_ -match '^[ ]*CONVEX_DEPLOYMENT[ ]*=\s*dev:([\w-]+)' } | Select-Object -First 1)
+    if ($dep) {
+      $m = [regex]::Match($dep, 'dev:([\w-]+)')
+      if ($m.Success) {
+        $slug = $m.Groups[1].Value
+        $env:CONVEX_HTTP_URL = "https://$slug.convex.site"
+        return $true
+      }
+    }
+    return $false
+  }
+
+  if (_Extract-And-Set $appEnvLocal) { return }
+  # Generate .env.local if missing
+  try {
+    Push-Location $appDir
+    & npx --yes convex dev --once --typecheck disable --tail-logs disable | Out-Null
+  } catch {}
+  finally { Pop-Location }
+  _Extract-And-Set $appEnvLocal | Out-Null
+}
+
 switch ($Task) {
   'temporal:start' {
+    Ensure-ConvexHttpUrl
     $args = @()
     if ($RunCheck) { $args += '-RunCheck' }
     if ($VerboseBuild) { $args += '-VerboseBuild' }
@@ -68,11 +110,13 @@ switch ($Task) {
     break
   }
   'hc:ephemeral' {
+    Ensure-ConvexHttpUrl
     if (-not $env:CONVEX_HTTP_URL) { throw 'Set CONVEX_HTTP_URL in .env' }
     Run-WithTimeout 'uv run python -m job_scrape_application.workflows.temporal_health_check' $TimeoutSeconds
     break
   }
   'hc:real' {
+    Ensure-ConvexHttpUrl
     if (-not $env:TEMPORAL_ADDRESS) { $env:TEMPORAL_ADDRESS = '127.0.0.1:7233' }
     if (-not $env:TEMPORAL_NAMESPACE) { $env:TEMPORAL_NAMESPACE = 'default' }
     if (-not $env:CONVEX_HTTP_URL) { throw 'Set CONVEX_HTTP_URL in .env' }
