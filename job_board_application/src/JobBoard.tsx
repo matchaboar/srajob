@@ -66,6 +66,7 @@ export function JobBoard() {
   const aiApplications = useQuery((api as any).formFiller.listUserAIApplications, {} as any);
   const applyToJob = useMutation(api.jobs.applyToJob);
   const queueAIApplication = useMutation((api as any).formFiller.queueApplication);
+  const retryQueueItem = useMutation((api as any).formFiller.retryQueueItem);
   const rejectJob = useMutation(api.jobs.rejectJob);
   const withdrawApplication = useMutation(api.jobs.withdrawApplication);
 
@@ -641,6 +642,23 @@ export function JobBoard() {
                           className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
                         >
                           View Data
+                        </button>
+                      </div>
+                    )}
+                    {(item.status === 'error' || item.status === 'running') && (
+                      <div className="mt-2">
+                        <button
+                          onClick={async () => {
+                            try {
+                              await retryQueueItem({ id: item._id });
+                              toast.success('Re-submitted');
+                            } catch (e) {
+                              toast.error('Failed to re-submit');
+                            }
+                          }}
+                          className="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700"
+                        >
+                          Re-submit
                         </button>
                       </div>
                     )}

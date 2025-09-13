@@ -54,15 +54,23 @@ export default function DataDrawer({ open, onClose, title, data, logs }: Props) 
           {(logs && (logs.fieldsYaml || logs.fillLogYaml || logs.screenshot)) && (
             <div>
               <div className="text-sm font-medium text-gray-700 mb-2">Logs</div>
-              <div className="text-xs bg-gray-50 border rounded-md p-3 text-gray-700">
+              <div className="text-xs bg-gray-50 border rounded-md p-3 text-gray-700 space-y-2">
                 {logs.fieldsYaml && (
-                  <div className="mb-1"><span className="font-semibold">fieldsYaml:</span> {logs.fieldsYaml}</div>
+                  <div>
+                    <div className="font-semibold mb-1">fieldsYaml:</div>
+                    <pre className="whitespace-pre-wrap break-words bg-white border rounded p-2 text-[11px] leading-4 overflow-auto max-h-64">
+                      {logs.fieldsYaml}
+                    </pre>
+                  </div>
                 )}
                 {logs.fillLogYaml && (
                   <div className="mb-1"><span className="font-semibold">fillLogYaml:</span> {logs.fillLogYaml}</div>
                 )}
                 {logs.screenshot && (
-                  <div><span className="font-semibold">screenshot:</span> {logs.screenshot}</div>
+                  <div>
+                    <div className="font-semibold mb-1">screenshot:</div>
+                    <img src={logs.screenshot} alt="Filled form screenshot" className="border rounded max-w-full" style={{ width: 200 }} />
+                  </div>
                 )}
               </div>
             </div>
@@ -72,4 +80,3 @@ export default function DataDrawer({ open, onClose, title, data, logs }: Props) 
     </div>
   );
 }
-

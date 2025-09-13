@@ -2,8 +2,6 @@
 __pycache__
 
 # Environment files (keep templates tracked)
-.env
-.env.local
 job_board_application/.env
 job_board_application/.env.local
 !*.env.example

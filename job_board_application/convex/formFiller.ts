@@ -284,3 +284,18 @@ export const queueJobsForUser = mutation({
     return { inserted };
   },
 });
+
+// Allow user to retry a specific queued item (from error or running back to pending)
+export const retryQueueItem = mutation({
+  args: { id: v.id("form_fill_queue") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      status: "pending",
+      error: undefined,
+      startedAt: undefined,
+      queuedAt: Date.now(),
+    });
+    return null;
+  },
+});

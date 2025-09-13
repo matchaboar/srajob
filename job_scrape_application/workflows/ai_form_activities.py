@@ -147,7 +147,7 @@ def run_form_fill(job_url: str, resume: Optional[Union[Dict[str, Any], str]] = N
     try:
         if resume:
             resume_yaml = _write_resume_yaml(resume)
-        labels, options_map, buttons_map, roles_map, fields_path, out_dir, fill_log_path = collect(
+        labels, options_map, buttons_map, roles_map, fields_path, out_dir, fill_log_path, screenshot_thumb_path = collect(
             job_url,
             max_tabs=300,
             headless=True,
@@ -162,11 +162,23 @@ def run_form_fill(job_url: str, resume: Optional[Union[Dict[str, Any], str]] = N
         filled = _extract_filled_data_from_log(fill_log_path)
         logs: Dict[str, str] = {}
         if fields_path:
-            logs["fieldsYaml"] = str(fields_path)
+            try:
+                # Include rendered YAML content instead of just the path
+                logs["fieldsYaml"] = Path(fields_path).read_text(encoding="utf-8")
+            except Exception:
+                # Fallback to path if reading fails
+                logs["fieldsYaml"] = str(fields_path)
         if fill_log_path:
             logs["fillLogYaml"] = str(fill_log_path)
-        # Screenshot path is generated inside theorycraft; infer location
-        # Not strictly necessary, so skip unless needed later
+        # Attach small thumbnail screenshot as data URL (super compressed)
+        if screenshot_thumb_path:
+            try:
+                import base64
+                b = Path(screenshot_thumb_path).read_bytes()
+                b64 = base64.b64encode(b).decode("ascii")
+                logs["screenshot"] = f"data:image/jpeg;base64,{b64}"
+            except Exception:
+                pass
         return {"filledData": filled, "logs": logs}
     finally:
         if resume_yaml and resume_yaml.exists():

@@ -1029,6 +1029,7 @@ def collect_form_labels(
 
         # Full-page screenshot after filling (not during scan-only)
         screenshot_path: Optional[Path] = None
+        screenshot_thumb_path: Optional[Path] = None
         if not scan_only:
             try:
                 # Prefer centralized test-artifacts screenshots directory when available
@@ -1067,8 +1068,32 @@ def collect_form_labels(
                 if data:
                     with open(screenshot_path, 'wb') as fh:
                         fh.write(data)
+
+                # Also write a very small, compressed JPEG thumbnail to save space
+                try:
+                    # Shrink viewport for thumbnail capture
+                    try:
+                        page.set_viewport_size({"width": 360, "height": 900})
+                    except Exception:
+                        pass
+                    thumb_name = (Path(shot_name).stem + "-thumb.jpg") if screenshot_name else f"screenshot-thumb-{ts}.jpg"
+                    screenshot_thumb_path = screenshots_dir / thumb_name
+                    thumb_bytes = None
+                    try:
+                        thumb_bytes = page.screenshot(full_page=False, type='jpeg', quality=25)
+                    except Exception:
+                        try:
+                            thumb_bytes = page.locator("html").screenshot(type='jpeg', quality=25)
+                        except Exception:
+                            thumb_bytes = None
+                    if thumb_bytes:
+                        with open(screenshot_thumb_path, 'wb') as fh:
+                            fh.write(thumb_bytes)
+                except Exception:
+                    screenshot_thumb_path = None
             except Exception:
                 screenshot_path = None
+                screenshot_thumb_path = None
 
         context.close()
         browser.close()
@@ -1076,7 +1101,16 @@ def collect_form_labels(
     # Convert to list forms for YAML
     options_out = {k: sorted(list(v)) for k, v in field_options.items()}
     buttons_out = {k: sorted(list(v)) for k, v in field_buttons.items()}
-    return labels, options_out, buttons_out, field_roles, fields_path, target_out_dir, fill_log_path
+    return (
+        labels,
+        options_out,
+        buttons_out,
+        field_roles,
+        fields_path,
+        target_out_dir,
+        fill_log_path,
+        screenshot_thumb_path,
+    )
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -1177,7 +1211,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     else:
         resume_yaml_path = None
 
-    labels, options_map, buttons_map, roles_map, fields_path, actual_out_dir, fill_log_path = collect_form_labels(
+    labels, options_map, buttons_map, roles_map, fields_path, actual_out_dir, fill_log_path, _ = collect_form_labels(
         url,
         max_tabs=args.max_tabs,
         headless=args.headless,
